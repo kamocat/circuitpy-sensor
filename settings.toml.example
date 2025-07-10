@@ -1,0 +1,6 @@
+#   CIRCUITPY_WIFI_SSID = "myWiFiName"
+#   CIRCUITPY_WIFI_PASSWORD = "mywifipassword"
+#   mqtt_broker ="test.mosquitto.org" #Could also be IP address
+#   mqtt_port = 1883  # unencrytped, use 8883 for TLS encrypted
+#   mqtt_username = ""
+#   mqtt_password = ""
