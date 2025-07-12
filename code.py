@@ -7,17 +7,21 @@ import time
 import ssl, socketpool, wifi
 import adafruit_minimqtt.adafruit_minimqtt as MQTT
 import json
+import versions
+import watchdog
+import adafruit_logging
+import microcontroller
+wdt = microcontroller.watchdog
+log = adafruit_logging.getLogger("errors")
 
 pin = digitalio.DigitalInOut(board.GP17) #Used here to control the bmp280 I2C address
 pin.direction = digitalio.Direction.OUTPUT
 pin.value = True
-i2c = busio.I2C(board.GP19, board.GP18)
+i2c = busio.I2C(board.GP19, board.GP18) #SCL,SDA
 sensor = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
 
-my_mqtt_topic_hello = "me/feeds/hello"  # the topic we send on
-my_mqtt_topic_light = "me/feeds/light"  # the topic we receive on (could be the same)
-status_topic = "home/bedroom/status"
-cmd_topic = "home/bedroom/cmd"
+status_topic = "home/office/status"
+cmd_topic = "home/office/cmd"
 
 # Connect to WiFi
 print(f"Connecting to {os.getenv('CIRCUITPY_WIFI_SSID')}")
@@ -37,31 +41,31 @@ mqtt_client = MQTT.MQTT(
 def connected(client, userdata, flags, rc):
     print("Connected to MQTT broker!")
 
-    client.subscribe( my_mqtt_topic_light) # say I want to listen to this topic
-    discovery_topic = 'home/device/test/config'
+    client.subscribe( cmd_topic ) # I want to listen to this topic
+    discovery_topic = 'home/device/'+versions.uid+'/config'
     discovery_payload = {
   "dev": {
     "mf": "RaspberryPi",
-    "mdl": "pico 2 W",
-    "sw": "10.0.0_beta",
-    "ids": "test",
-    "name": "bedroom",
+    "mdl": versions.hw,
+    "sw": versions.cp,
+    "ids": versions.uid,
+    "name": "office",
   },
   "o": {
     "name": "RP2350 MQTT Sensor",
-    "sw": "0.0.1",
+    "sw": versions.sw,
   },
   "cmps": {
-    "bedroom_pressure": {
-      "unique_id": "bedroom_pressure",
+    versions.uid+'_1': {
+      "unique_id": versions.uid+'_1',
       "p": "sensor",
       "name": "pressure",
       "device_class": "atmospheric_pressure",
       "unit_of_measurement": "hPa",
       "value_template": "{{value_json.pressure}}",
     },
-    "bedroom_temperature": {
-      "unique_id": "bedroom_temperature",
+    versions.uid+'_2': {
+      "unique_id": versions.uid+'_2',
       "p": "sensor",
       "name": "temperature",
       "device_class": "temperature",
@@ -101,6 +105,7 @@ mqtt_client.connect()
 last_msg_send_time = 0
 
 while True:
+    wdt.feed()
     mqtt_client.loop(timeout=1)  # see if any messages to me
 
     if time.monotonic() - last_msg_send_time > 30.0:  # send a message every 30 secs
