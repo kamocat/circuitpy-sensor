@@ -11,6 +11,7 @@ import versions
 import watchdog
 import adafruit_logging
 import microcontroller
+import adafruit_ntp
 wdt = microcontroller.watchdog
 log = adafruit_logging.getLogger("errors")
 
@@ -27,6 +28,11 @@ cmd_topic = "home/office/cmd"
 print(f"Connecting to {os.getenv('CIRCUITPY_WIFI_SSID')}")
 wifi.radio.connect(os.getenv("CIRCUITPY_WIFI_SSID"), os.getenv("CIRCUITPY_WIFI_PASSWORD"))
 
+# Set up NTP
+pool = socketpool.SocketPool(wifi.radio)
+ntp = adafruit_ntp.NTP(pool, tz_offset=0, cache_seconds=3600)
+log.info(f'The time is {ntp.datetime}')
+
 # Set up a MiniMQTT Client
 mqtt_client = MQTT.MQTT(
     broker=os.getenv("mqtt_broker"),
@@ -39,7 +45,7 @@ mqtt_client = MQTT.MQTT(
 
 # Called when the client is connected successfully to the broker
 def connected(client, userdata, flags, rc):
-    print("Connected to MQTT broker!")
+    log.info("Connected to MQTT broker!")
 
     client.subscribe( cmd_topic ) # I want to listen to this topic
     discovery_topic = 'home/device/'+versions.uid+'/config'
@@ -81,25 +87,18 @@ def connected(client, userdata, flags, rc):
 
 # Called when the client is disconnected
 def disconnected(client, userdata, rc):
-    print("Disconnected from MQTT broker!")
+    log.warning("Disconnected from MQTT broker!")
 
 # Called when a topic the client is subscribed to has a new message
 def message(client, topic, message):
-    print("New message on topic {0}: {1}".format(topic, message))
-    val = 0
-    try:
-        val = int(message)  # attempt to parse it as a number
-    except ValueError:
-        pass
-    print("setting LED to color:",val)
-    # led.fill(val)  # if we had leds
+    log.info("New message on topic {0}: {1}".format(topic, message))
 
 # Set the callback methods defined above
 mqtt_client.on_connect = connected
 mqtt_client.on_disconnect = disconnected
 mqtt_client.on_message = message
 
-print("Connecting to MQTT broker...")
+log.info("Connecting to MQTT broker...")
 mqtt_client.connect()
 
 last_msg_send_time = 0

@@ -3,7 +3,7 @@ import adafruit_logging
 import storage
 import supervisor
 
-print("SW:0.2.0")
+print("SW:0.3.0")
 
 storage.remount("/", readonly=False) #Make flash read/write
 log = adafruit_logging.getLogger("errors")

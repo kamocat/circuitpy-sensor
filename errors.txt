@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 1036, in _wait_for_msg
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 1124, in _sock_exact_recv
+OSError: [Errno 104] ECONNRESET
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "code.py", line 103, in <module>
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 1011, in loop
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 1041, in _wait_for_msg
+MMQTTException: ('Unexpected error while waiting for messages', None)
+
+Code done running.
+
+Press any key to enter the REPL. Use CTRL-D to reload.
+soft reboot
+
+Auto-reload is on. Simply save files over USB to run them or enter REPL to disable.
+code.py output:
+Connecting to sunshine
+Connecting to MQTT broker...
+Traceback (most recent call last):
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 448, in connect
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 545, in _connect
+  File "adafruit_connection_manager.py", line 331, in get_socket
+  File "adafruit_connection_manager.py", line 248, in _get_connected_socket
+OSError: [Errno 119] EINPROGRESS
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "code.py", line 98, in <module>
+  File "adafruit_minimqtt/adafruit_minimqtt.py", line 482, in connect
+MMQTTException: ('Repeated connect failures', None)
+
+Code done running.
