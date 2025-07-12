@@ -12,17 +12,23 @@ import watchdog
 import adafruit_logging
 import microcontroller
 import adafruit_ntp
+# Start watchdog
 wdt = microcontroller.watchdog
-log = adafruit_logging.getLogger("errors")
+# Set up logging
+log = adafruit_logging.Logger("errors", level=0)
+try:
+    log.addHandler(adafruit_logging.RotatingFileHandler("/errors.log", maxBytes=65536, backupCount=32))
+    log.addHandler(adafruit_logging.StreamHandler())
+    print("Logging to file")
+except Exception as e:
+    print(f"Not logging to file due to {e}")
 
+# Set up I2C temperature/pressure sensor
 pin = digitalio.DigitalInOut(board.GP17) #Used here to control the bmp280 I2C address
 pin.direction = digitalio.Direction.OUTPUT
 pin.value = True
 i2c = busio.I2C(board.GP19, board.GP18) #SCL,SDA
 sensor = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
-
-status_topic = "home/office/status"
-cmd_topic = "home/office/cmd"
 
 # Connect to WiFi
 print(f"Connecting to {os.getenv('CIRCUITPY_WIFI_SSID')}")
@@ -31,9 +37,18 @@ wifi.radio.connect(os.getenv("CIRCUITPY_WIFI_SSID"), os.getenv("CIRCUITPY_WIFI_P
 # Set up NTP
 pool = socketpool.SocketPool(wifi.radio)
 ntp = adafruit_ntp.NTP(pool, tz_offset=0, cache_seconds=3600)
-log.info(f'The time is {ntp.datetime}')
+def timestamp():
+    now = ntp.datetime
+    now = [f'{x:02d}' for x in now]
+    d = "/".join(now[:3])
+    t = ":".join(now[3:6])
+    return f'{d} {t}'
+log.info(timestamp())
 
 # Set up a MiniMQTT Client
+status_topic = "home/office/status"
+cmd_topic = "home/office/cmd"
+
 mqtt_client = MQTT.MQTT(
     broker=os.getenv("mqtt_broker"),
     port=os.getenv("mqtt_port"),

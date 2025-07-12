@@ -2,7 +2,6 @@ cp = ''
 hw = ''
 uid = ''
 mac = ''
-sw = ''
 with open('/boot_out.txt') as f:
     content = f.read().split()
     cp = content[2]
