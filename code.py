@@ -11,9 +11,12 @@ import versions
 import watchdog
 import adafruit_logging
 import microcontroller
+from watchdog import WatchDogMode
 import adafruit_ntp
 # Start watchdog
 wdt = microcontroller.watchdog
+wdt.timeout = 5
+wdt.mode = WatchDogMode.RESET
 # Set up logging
 log = adafruit_logging.Logger("errors", level=0)
 try:

@@ -3,10 +3,10 @@ import adafruit_logging
 import storage
 import supervisor
 
-print("SW:0.3.0")
+print("SW:0.3.1")
 
 storage.remount("/", readonly=False) #Make flash read/write
-log = adafruit_logging.getLogger("errors")
+log = adafruit_logging.getLogger("errors", level=0)
 try:
     log.addHandler(adafruit_logging.RotatingFileHandler("/errors.log", maxBytes=65536, backupCount=32))
     log.addHandler(adafruit_logging.StreamHandler())
