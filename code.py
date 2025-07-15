@@ -12,7 +12,7 @@ import adafruit_logging
 import microcontroller
 from watchdog import WatchDogMode
 import adafruit_ntp
-import mqtt-discovery
+import discovery
 # Start watchdog
 wdt = microcontroller.watchdog
 wdt.timeout = 5
@@ -34,13 +34,15 @@ i2c = busio.I2C(board.GP19, board.GP18) #SCL,SDA
 sensor = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
 
 # Set up MQTT device discovery
-device = mqtt-discovery.Device('test')
-temperature = mqtt-disvoery.Sensor('temperature', {'device_class':'temperature', 'unit_of_measurement':'°C'})
-temperature.get = lambda: sensor.temperature
-device.register_cmp(temperature)
-pressure = mqtt-disvoery.Sensor('pressure', {'device_class':'atmospheric_pressure', 'unit_of_measurement':'hPa'})
-pressure.get = lambda: sensor.pressure
-device.register_cmp(pressure)
+device = discovery.Device('test')
+def get_temperature():
+    return sensor.temperature
+def get_pressure():
+    return sensor.temperature
+device.register_cmp(discovery.Sensor('temperature', get_temperature,
+    device_class='temperature', unit_of_measurement='°C'))
+device.register_cmp(discovery.Sensor('pressure', get_pressure,
+    device_class='atmospheric_pressure', unit_of_measurement='hPa'))
 
 # Connect to WiFi
 print(f"Connecting to {os.getenv('CIRCUITPY_WIFI_SSID')}")
@@ -61,7 +63,7 @@ def connected(client, userdata, flags, rc):
     log.info("Connected to MQTT broker!")
 
     client.subscribe( device.cmd_topic ) # I want to listen to this topic
-    client.publish(device.discovery_topic, json.dumps(device.discovery_payload), retain=True)
+    client.publish(device.discovery_topic, json.dumps(device.payload), retain=True)
 
 # Called when the client is disconnected
 def disconnected(client, userdata, rc):
@@ -99,5 +101,6 @@ while True:
 
     if time.monotonic() - last_msg_send_time > 30.0:  # send a message every 30 secs
         last_msg_send_time = time.monotonic()
-        mqtt_client.publish( device.status_topic, json.dumps(device.get()) )
-        print("sending MQTT msg..", status_topic, msg)
+        msg = json.dumps(device.get())
+        mqtt_client.publish( device.status_topic, msg )
+        print("sending MQTT msg..", device.status_topic, msg)
