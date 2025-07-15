@@ -4,8 +4,13 @@
 import time
 import board
 import busio
+import digitalio
 
-i2c = busio.I2C(board.GP19, board.GP18) #SCL, SDA
+pin = digitalio.DigitalInOut(board.GP17)  # Used here to control the bmp280 I2C address
+pin.direction = digitalio.Direction.OUTPUT
+pin.value = True
+
+i2c = busio.I2C(board.GP19, board.GP18)  # SCL, SDA
 
 while not i2c.try_lock():
     pass
@@ -20,4 +25,3 @@ try:
 
 finally:  # unlock the i2c bus when ctrl-c'ing out of the loop
     i2c.unlock()
-

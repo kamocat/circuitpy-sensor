@@ -5,10 +5,14 @@ import supervisor
 
 print("SW:0.3.1")
 
-storage.remount("/", readonly=False) #Make flash read/write
+# storage.remount("/", readonly=False) #Make flash read/write
 log = adafruit_logging.getLogger("errors", level=0)
 try:
-    log.addHandler(adafruit_logging.RotatingFileHandler("/errors.log", maxBytes=65536, backupCount=32))
+    log.addHandler(
+        adafruit_logging.RotatingFileHandler(
+            "/errors.log", maxBytes=65536, backupCount=32
+        )
+    )
     log.addHandler(adafruit_logging.StreamHandler())
     print("Logging to file")
 except Exception as e:
