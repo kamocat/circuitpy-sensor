@@ -6,7 +6,6 @@ import digitalio
 import os
 import ssl, socketpool, wifi
 import adafruit_minimqtt.adafruit_minimqtt as MQTT
-import json
 import watchdog
 import adafruit_logging
 import microcontroller
@@ -39,7 +38,7 @@ i2c = busio.I2C(board.GP19, board.GP18)  # SCL,SDA
 sensor = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
 
 # Set up MQTT device discovery
-device = discovery.Device("test")
+device = discovery.Device("testbench")
 
 
 def get_temperature():
@@ -49,7 +48,7 @@ def get_temperature():
 def get_pressure():
     return sensor.temperature
 
-
+'''
 device.register_cmp(
     discovery.Sensor(
         "temperature",
@@ -65,7 +64,7 @@ device.register_cmp(
         device_class="atmospheric_pressure",
         unit_of_measurement="hPa",
     )
-)
+)'''
 device.register_cmp(discovery.Number("anumber"))
 device.register_cmp(discovery.Text("sometext"))
 
@@ -92,7 +91,7 @@ def connected(client, userdata, flags, rc):
     log.info("Connected to MQTT broker!")
 
     client.subscribe(device.cmd_topic)  # I want to listen to this topic
-    client.publish(device.discovery_topic, json.dumps(device.payload), retain=True)
+    client.publish(device.discovery_topic, device.discovery_payload(), retain=True)
 
 
 # Called when the client is disconnected
@@ -103,8 +102,8 @@ def disconnected(client, userdata, rc):
 # Called when a topic the client is subscribed to has a new message
 def message(client, topic, message):
     log.info("New message on topic {0}: {1}".format(topic, message))
-    if topic == device.status_topic:
-        device.get(message)
+    if topic == device.cmd_topic:
+        device.set(message)
 
 
 # Set the callback methods defined above
@@ -135,8 +134,8 @@ while True:
     wdt.feed()
     mqtt_client.loop(timeout=1)  # see if any messages to me
 
-    if time.monotonic() - last_msg_send_time > 30.0:  # send a message every 30 secs
+    if time.monotonic() - last_msg_send_time > 5:
         last_msg_send_time = time.monotonic()
-        msg = json.dumps(device.get())
+        msg = device.get()
         mqtt_client.publish(device.status_topic, msg)
         print("sending MQTT msg..", device.status_topic, msg)

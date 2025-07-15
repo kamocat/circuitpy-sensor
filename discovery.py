@@ -1,5 +1,6 @@
 import versions
 import adafruit_logging
+import json
 
 log = adafruit_logging.getLogger("errors")
 
@@ -15,7 +16,7 @@ class Device:
         self.cmps = []
         self.status_topic = "/".join([prefix, name, "status"])
         self.cmd_topic = "/".join([prefix, name, "cmd"])
-        self.discovery_topic = "/".join([prefix, "device", versions.uid, "cmd"])
+        self.discovery_topic = "/".join([prefix, "device", versions.uid, "config"])
         self.payload = {
             "dev": {
                 "mf": "RaspberryPi",
@@ -49,12 +50,22 @@ class Device:
             log.error(f"Can't remove component {cmp.attributes['name']}")
 
     def get(self):
-        return {c.name: c.get() for c in self.cmps if hasattr(c, "get")}
+        vals = {c.name: c.get() for c in self.cmps if hasattr(c, "get")}
+        return json.dumps(vals)
 
-    def set(self, val):
+    def set(self, s):
+        try:
+            val = json.loads(s)
+        except Exception as e:
+            log.info(f'In decoding {s}')
+            log.error(e)
+            return
         for c in self.cmps:
             if c.name in val and hasattr(c, "set"):
                 c.set(val[c.name])
+
+    def discovery_payload(self):
+        return json.dumps(self.payload)
 
 
 """MQTT Sensor 
